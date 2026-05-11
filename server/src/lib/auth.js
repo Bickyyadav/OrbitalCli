@@ -15,7 +15,7 @@ export const auth = betterAuth({
     ],
     plugins: [
         deviceAuthorization({
-            verificationUri: "/device",
+            verificationUri: process.env.CLIENT_URL ? `${process.env.CLIENT_URL}/device` : "http://localhost:3000/device",
             schema: {},
         }),
     ],

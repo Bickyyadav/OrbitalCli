@@ -6,9 +6,11 @@ import chalk from "chalk";
 import figlet from "figlet";
 
 import { Command } from "commander";
+import { login } from "./commands/auth/login.js";
 
 // import { login, logout, whoami } from "./commands/auth/login.js";
 // import { wakeUp } from "./commands/ai/wakeUp.js";
+
 
 dotenv.config();
 
@@ -24,7 +26,9 @@ async function main() {
     );
     console.log(chalk.gray("A Cli based AI tool \n"));
     const program = new Command();
-    program.name("orbit").version("1.0.0").description("A Cli based AI tool");
+    program.name("orbit").version("1.0.0").description("A Cli based AI tool")
+        .addCommand(login)
+
 
 
     // Default action shows help
