@@ -21,6 +21,13 @@ app.get("/health", (req, res) => {
     res.json({ message: "ok" })
 })
 
+app.use("/device", async (req, res) => {
+    const { user_code } = req.query
+    res.redirect(`${process.env.CLIENT_URL}/device?user_code=${user_code}`)
+})
+
+
+
 app.listen(process.env.PORT || 5001, () => {
     console.log(`Server is running on port ${process.env.PORT || 5001}`)
 })
