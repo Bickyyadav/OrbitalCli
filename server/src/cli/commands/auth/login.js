@@ -118,6 +118,7 @@ export async function loginAction(opts) {
     if (!serverUrl || !clientId) {
         throw new Error("Server URL and Client ID are required");
     }
+    
     intro(chalk.bold("Welcome to Orbit CLI"))
 
     const existingToken = false;
@@ -168,6 +169,7 @@ export async function loginAction(opts) {
 
             process.exit(1);
         }
+
         const {
             device_code,
             user_code,
@@ -188,6 +190,7 @@ export async function loginAction(opts) {
                 verification_uri_complete || verification_uri
             )}`
         );
+
         console.log(`Enter code: ${chalk.bold.green(user_code)}`);
         console.log("");
 
@@ -215,6 +218,7 @@ export async function loginAction(opts) {
             clientId,
             interval
         );
+
         if (token) {
             // Store the token
             const saved = await storeToken(token);
@@ -281,7 +285,7 @@ async function pollForToken(authClient, deviceCode, clientId, initialInterval) {
                     },
                 });
 
-                
+
                 if (data?.access_token) {
                     console.log(
                         chalk.bold.yellow(`Your access token: ${data.access_token}`)
@@ -327,6 +331,76 @@ async function pollForToken(authClient, deviceCode, clientId, initialInterval) {
 
 
 // ============================================
+// LOGOUT COMMAND
+// ============================================
+
+
+export async function logoutAction() {
+    intro(chalk.bold("👋 Logout"));
+
+    const token = await getStoredToken();
+    if (!token) {
+        console.log(chalk.yellow("You're not logged in."));
+        process.exit(0);
+    }
+
+    const shouldLogout = await confirm({
+        message: "Are you sure you want to logout?",
+        initialValue: false,
+    });
+
+    if (isCancel(shouldLogout) || !shouldLogout) {
+        cancel("Logout cancelled");
+        process.exit(0);
+    }
+    const cleared = await clearStoredToken();
+
+    if (cleared) {
+        outro(chalk.green("✅ Successfully logged out!"));
+    } else {
+        console.log(chalk.yellow("⚠️  Could not clear token file."));
+    }
+}
+
+
+// ============================================
+// WHOAMI COMMAND
+// ============================================
+
+export async function whoamiAction(options) {
+    const token = await requireAuth();
+    if (!token?.access_token) {
+        console.log("No access token found. Please login.");
+        process.exit(1);
+    }
+
+    const user = await prisma.user.findFirst({
+        where: {
+            sessions: {
+                some: {
+                    token: token.access_token,
+                },
+            },
+        },
+        select: {
+            id: true,
+            name: true,
+            email: true,
+            image: true,
+        },
+    });
+
+    // Output user session info
+    console.log(
+        chalk.bold.greenBright(`\n👤 User: ${user.name}
+📧 Email: ${user.email}
+👤 ID: ${user.id}`)
+    );
+
+}
+
+
+// ============================================
 // COMMANDER SETUP
 // ============================================
 
@@ -335,3 +409,15 @@ export const login = new Command("login")
     .option("--server-url <url>", "The Better Auth server URL", URL)
     .option("--client-id <id>", "The OAuth client ID", CLIENT_ID)
     .action(loginAction);
+
+
+
+export const logout = new Command("logout")
+    .description("Logout and clear stored credentials")
+    .action(logoutAction);
+
+
+export const whoami = new Command("whoami")
+    .description("Show current authenticated user")
+    .option("--server-url <url>", "The Better Auth server URL", URL)
+    .action(whoamiAction);

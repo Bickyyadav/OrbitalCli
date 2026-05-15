@@ -6,7 +6,8 @@ import chalk from "chalk";
 import figlet from "figlet";
 
 import { Command } from "commander";
-import { login } from "./commands/auth/login.js";
+import { login, logout, whoami } from "./commands/auth/login.js";
+import { wakeup } from "./commands/ai/wakeup.js";
 
 // import { login, logout, whoami } from "./commands/auth/login.js";
 // import { wakeUp } from "./commands/ai/wakeUp.js";
@@ -24,19 +25,25 @@ async function main() {
             })
         )
     );
+
     console.log(chalk.gray("A Cli based AI tool \n"));
     const program = new Command();
     program.name("orbit").version("1.0.0").description("A Cli based AI tool")
         .addCommand(login)
+        .addCommand(logout)
+        .addCommand(whoami)
+        .addCommand(wakeup)
 
 
 
-    // Default action shows help
-    program.action(() => {
-        program.help();
-    });
+    program.showHelpAfterError();
 
-    program.parse();
+    program.parse(process.argv);
+
+    // Show help if no arguments were provided
+    if (!process.argv.slice(2).length) {
+        program.outputHelp();
+    }
 }
 
 main().catch((error) => {
